@@ -7,11 +7,12 @@ import com.example.mounsters.core.hardware.data.AndroidLocationManager
 import com.example.mounsters.core.hardware.domain.AccelerometerManager
 import com.example.mounsters.core.hardware.domain.CameraManager
 import com.example.mounsters.core.hardware.domain.LocationManager
+
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import jakarta.inject.Singleton
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)

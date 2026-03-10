@@ -6,8 +6,8 @@ import android.hardware.camera2.CameraManager
 import com.example.mounsters.core.hardware.domain.FlashManager
 
 import dagger.hilt.android.qualifiers.ApplicationContext
-import jakarta.inject.Inject
 import kotlinx.coroutines.delay
+import javax.inject.Inject
 
 class AndroidFlashManager @Inject constructor(
     @ApplicationContext private val context: Context

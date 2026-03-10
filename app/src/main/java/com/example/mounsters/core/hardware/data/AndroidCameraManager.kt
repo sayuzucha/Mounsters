@@ -6,7 +6,8 @@ import android.content.pm.PackageManager
 import android.provider.MediaStore
 import com.example.mounsters.core.hardware.domain.CameraManager
 import dagger.hilt.android.qualifiers.ApplicationContext
-import jakarta.inject.Inject
+
+import javax.inject.Inject
 
 class AndroidCameraManager @Inject constructor(
     @ApplicationContext private val context: Context

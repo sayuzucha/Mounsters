@@ -5,10 +5,10 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import com.alilopez.kt_demohilt.core.hardware.domain.AccelerometerManager
 import com.example.mounsters.core.hardware.domain.AccelerometerManager
 import dagger.hilt.android.qualifiers.ApplicationContext
-import jakarta.inject.Inject
+
+import javax.inject.Inject
 import kotlin.math.sqrt
 
 class AndroidAccelerometerManager @Inject constructor(

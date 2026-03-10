@@ -2,12 +2,13 @@ package com.example.mounsters.core.hardware.data
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.alilopez.kt_demohilt.core.hardware.domain.DeviceLocation
-import com.alilopez.kt_demohilt.core.hardware.domain.LocationManager
+
+import com.example.mounsters.core.hardware.domain.DeviceLocation
+import com.example.mounsters.core.hardware.domain.LocationManager
 import com.google.android.gms.location.LocationServices
 import dagger.hilt.android.qualifiers.ApplicationContext
-import jakarta.inject.Inject
 import kotlinx.coroutines.suspendCancellableCoroutine
+import javax.inject.Inject
 import kotlin.coroutines.resume
 
 class AndroidLocationManager @Inject constructor(
