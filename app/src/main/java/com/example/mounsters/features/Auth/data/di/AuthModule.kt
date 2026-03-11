@@ -1,19 +1,18 @@
 package com.example.mounsters.features.Auth.data.di
 
-import com.example.mounsters.core.di.AppContainer
+import com.example.mounsters.features.Auth.domain.repositories.AuthRepository
 import com.example.mounsters.features.Auth.domain.usecases.AuthUseCase
-import com.example.mounsters.features.auth.domain.usecases.AuthUseCase
-import com.example.mounsters.features.auth.presentation.viewmodels.AuthViewModelFactory
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 
-class AuthModule(
-    private val appContainer: AppContainer
-) {
+@Module
+@InstallIn(SingletonComponent::class)
+object AuthUseCaseModule {
 
-    private fun provideAuthUseCase() = AuthUseCase(appContainer.authRepository)
-
-    fun provideAuthViewModelFactory(): AuthViewModelFactory {
-        return AuthViewModelFactory(
-            authUseCase = provideAuthUseCase()
-        )
+    @Provides
+    fun provideAuthUseCase(repository: AuthRepository): AuthUseCase {
+        return AuthUseCase(repository)
     }
 }

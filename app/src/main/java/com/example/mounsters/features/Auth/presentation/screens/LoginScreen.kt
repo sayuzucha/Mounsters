@@ -24,23 +24,21 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mounsters.features.Auth.presentation.viewmodels.AuthViewModel
-import com.example.mounsters.features.Auth.presentation.viewmodels.AuthViewModelFactory
-import com.example.mounsters.features.auth.domain.entities.LoginRequest
-import com.example.mounsters.features.auth.presentation.viewmodels.AuthViewModel
-import com.example.mounsters.features.auth.presentation.viewmodels.AuthViewModelFactory
+import com.example.mounsters.features.Auth.domain.entities.LoginRequest
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    factory: AuthViewModelFactory,
     onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
 
-    val viewModel: AuthViewModel = viewModel(factory = factory)
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 

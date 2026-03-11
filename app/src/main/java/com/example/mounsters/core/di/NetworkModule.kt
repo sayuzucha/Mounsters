@@ -1,5 +1,7 @@
 package com.example.mounsters.core.di
 
+import com.example.mounsters.BuildConfig
+import com.example.mounsters.core.network.ApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,8 +19,16 @@ object NetworkModule {
     @MonsterApiRetrofit
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:3000/")
+            .baseUrl(BuildConfig.BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideApiService(
+        @MonsterApiRetrofit retrofit: Retrofit
+    ): ApiService {
+        return retrofit.create(ApiService::class.java)
     }
 }

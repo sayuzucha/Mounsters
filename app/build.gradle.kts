@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.bloodboond"
+    namespace = "com.example.mounsters"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.bloodboond"
+        applicationId = "com.example.mounsters"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -50,7 +50,7 @@ android {
             buildConfigField(
                 "String",
                 "BASE_URL",
-                "\"http://10.14.0.147:3000/\""
+                "\"http://10.0.2.2:3000/\""
             )
 
             resValue(
@@ -76,6 +76,8 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.transport.runtime)
     implementation(libs.play.services.location)
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

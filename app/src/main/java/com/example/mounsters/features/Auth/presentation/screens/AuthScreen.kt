@@ -18,11 +18,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+
 import com.example.mounsters.features.Auth.domain.entities.RegisterRequest
 import com.example.mounsters.features.Auth.presentation.viewmodels.AuthViewModel
-import com.example.mounsters.features.Auth.presentation.viewmodels.AuthViewModelFactory
+
 
 
 import kotlinx.coroutines.delay
@@ -30,11 +31,11 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(
-    factory: AuthViewModelFactory,
-    onRegisterSuccess: () -> Unit
+    onRegisterSuccess: () -> Unit,
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
 
-    val viewModel: AuthViewModel = viewModel(factory = factory)
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 

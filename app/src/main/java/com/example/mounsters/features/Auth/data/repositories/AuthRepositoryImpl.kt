@@ -2,14 +2,14 @@ package com.example.mounsters.features.Auth.data.repositories
 
 import com.example.mounsters.core.network.ApiService
 import com.example.mounsters.core.util.TokenManager
+import com.example.mounsters.features.Auth.data.datasources.remote.mapper.toDomain
 import com.example.mounsters.features.Auth.domain.entities.LoginRequest
 import com.example.mounsters.features.Auth.domain.entities.RegisterRequest
 import com.example.mounsters.features.Auth.domain.entities.User
 import com.example.mounsters.features.Auth.domain.repositories.AuthRepository
-import com.example.mounsters.features.auth.data.datasources.remote.mapper.toDomain
+import javax.inject.Inject
 
-
-class AuthRepositoryImpl(
+class AuthRepositoryImpl @Inject constructor(
     private val api: ApiService,
     private val tokenManager: TokenManager
 ) : AuthRepository {

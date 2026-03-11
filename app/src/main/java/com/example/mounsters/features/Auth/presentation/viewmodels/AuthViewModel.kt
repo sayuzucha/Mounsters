@@ -6,12 +6,14 @@ import com.example.mounsters.features.Auth.domain.entities.LoginRequest
 import com.example.mounsters.features.Auth.domain.entities.RegisterRequest
 import com.example.mounsters.features.Auth.domain.usecases.AuthUseCase
 import com.example.mounsters.features.Auth.presentation.screens.AuthUiState
-
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AuthViewModel(
+@HiltViewModel
+class AuthViewModel @Inject constructor(
     private val authUseCase: AuthUseCase
 ) : ViewModel() {
 
