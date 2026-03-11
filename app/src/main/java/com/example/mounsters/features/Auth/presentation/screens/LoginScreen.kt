@@ -23,12 +23,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.edit
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.mounsters.features.Auth.presentation.viewmodels.AuthViewModel
 import com.example.mounsters.features.Auth.domain.entities.LoginRequest
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +38,6 @@ fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
 
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
@@ -46,15 +45,13 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    // Manejo seguro de SharedPreferences y navegación
     LaunchedEffect(uiState.user) {
-        if (uiState.user != null) {
-
-            val prefs = context.getSharedPreferences("MonsterPrefs", Context.MODE_PRIVATE)
-
-            prefs.edit {
-                putString("username", uiState.user?.username ?: "Player")
+        uiState.user?.let { user ->
+            withContext(Dispatchers.IO) {
+                val prefs = context.getSharedPreferences("MonsterPrefs", Context.MODE_PRIVATE)
+                prefs.edit().putString("username", user.username ?: "Player").apply()
             }
-
             onLoginSuccess()
         }
     }
@@ -72,7 +69,6 @@ fun LoginScreen(
                 )
             )
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -100,15 +96,10 @@ fun LoginScreen(
 
             Card(
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1E293B)
-                ),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-
-                Column(
-                    modifier = Modifier.padding(24.dp)
-                ) {
+                Column(modifier = Modifier.padding(24.dp)) {
 
                     Text(
                         text = "Login",
@@ -123,9 +114,7 @@ fun LoginScreen(
                         value = email,
                         onValueChange = { email = it },
                         label = { Text("Email") },
-                        leadingIcon = {
-                            Icon(Icons.Default.Email, null)
-                        },
+                        leadingIcon = { Icon(Icons.Default.Email, null) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -136,90 +125,51 @@ fun LoginScreen(
                         value = password,
                         onValueChange = { password = it },
                         label = { Text("Password") },
-                        leadingIcon = {
-                            Icon(Icons.Default.Lock, null)
-                        },
+                        leadingIcon = { Icon(Icons.Default.Lock, null) },
                         trailingIcon = {
-                            IconButton(
-                                onClick = { passwordVisible = !passwordVisible }
-                            ) {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
-                                    imageVector = if (passwordVisible)
-                                        Icons.Default.Visibility
-                                    else
-                                        Icons.Default.VisibilityOff,
+                                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                     contentDescription = null
                                 )
                             }
                         },
-                        visualTransformation =
-                            if (passwordVisible) VisualTransformation.None
-                            else PasswordVisualTransformation(),
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    if (uiState.isLoading) {
-
-                        CircularProgressIndicator()
-
-                    } else {
-
-                        Button(
-                            onClick = {
-                                if (email.isNotBlank() && password.isNotBlank()) {
-                                    viewModel.login(
-                                        LoginRequest(
-                                            email = email,
-                                            password = password
-                                        )
-                                    )
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Text(
-                                "Login",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                    Button(
+                        onClick = {
+                            if (email.isNotBlank() && password.isNotBlank()) {
+                                viewModel.login(LoginRequest(email, password))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        enabled = !uiState.isLoading // ❌ evita multiples clicks
+                    ) {
+                        if (uiState.isLoading) {
+                            CircularProgressIndicator(color = Color.White)
+                        } else {
+                            Text("Login", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-
-                        Text(
-                            "No account?",
-                            color = Color.LightGray
-                        )
-
+                    Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+                        Text("No account?", color = Color.LightGray)
                         TextButton(onClick = onNavigateToRegister) {
-
-                            Text(
-                                "Register",
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text("Register", fontWeight = FontWeight.Bold)
                         }
                     }
 
                     uiState.error?.let {
-
                         Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            text = it,
-                            color = Color.Red
-                        )
+                        Text(text = it, color = Color.Red)
                     }
                 }
             }
