@@ -24,3 +24,4 @@ class TokenManager @Inject constructor(
         prefs.edit().remove("auth_token").apply()
     }
 }
+

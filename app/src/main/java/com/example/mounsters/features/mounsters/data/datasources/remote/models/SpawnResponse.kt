@@ -1,4 +1,4 @@
-package com.example.mounsters.features.spawns.data.datasources.remote.models
+package com.example.mounsters.features.mounsters.data.datasources.remote.models
 
 data class SpawnResponse(
     val success: Boolean,
@@ -24,3 +24,4 @@ data class SpawnMonster(
     val type: String?,
     val rarity: String?
 )
+

@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.mounsters.features.Auth.navigation.AuthNavGraph
+import com.example.mounsters.features.mounsters.navigation.MonstersNavGraph
 
 @Composable
 fun NavigationWrapper(modifier: Modifier = Modifier) {
@@ -17,5 +18,6 @@ fun NavigationWrapper(modifier: Modifier = Modifier) {
         modifier = modifier
     ) {
         AuthNavGraph().registerGraph(this, navController)
+        MonstersNavGraph().registerGraph(this, navController)
     }
 }
