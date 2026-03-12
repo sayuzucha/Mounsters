@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.mounsters.R
 import com.example.mounsters.core.hardware.data.AndroidFlashManager
 import com.example.mounsters.core.hardware.data.AndroidVibrateManager
@@ -28,12 +29,12 @@ import com.example.mounsters.core.util.TokenManager
 import com.example.mounsters.features.mounsters.domain.entities.Spawn
 import com.example.mounsters.features.mounsters.presentation.viewmodels.ExploreViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import kotlinx.coroutines.launch
 
 // Escalar imágenes de marcadores
 fun getScaledDrawable(
@@ -51,6 +52,7 @@ fun getScaledDrawable(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreScreen(
+    navController: NavController,
     viewModel: ExploreViewModel = hiltViewModel()
 ) {
 
@@ -72,7 +74,6 @@ fun ExploreScreen(
     val scope = rememberCoroutineScope()
     var chatInput by remember { mutableStateOf("") }
 
-
     LaunchedEffect(Unit) {
 
         viewModel.connectSocket(token)
@@ -80,11 +81,14 @@ fun ExploreScreen(
         Configuration.getInstance().userAgentValue = context.packageName
 
         while (true) {
+
             viewModel.loadNearbySpawns(
                 fixedLocation.latitude,
                 fixedLocation.longitude
             )
+
             delay(5000)
+
         }
     }
 
@@ -98,7 +102,10 @@ fun ExploreScreen(
                 .padding(padding)
         ) {
 
+            // =========================
             // MAPA
+            // =========================
+
             Box(modifier = Modifier.weight(1f)) {
 
                 if (loading) {
@@ -145,6 +152,10 @@ fun ExploreScreen(
                                 map.controller.setCenter(loc)
                             }
 
+                            // =========================
+                            // SPAWNS (MONSTRUOS)
+                            // =========================
+
                             spawns.forEach { spawn: Spawn ->
 
                                 val marker = Marker(map)
@@ -155,6 +166,7 @@ fun ExploreScreen(
                                 )
 
                                 marker.title = spawn.monster.name
+                                marker.snippet = "Tap to capture"
 
                                 marker.setAnchor(
                                     Marker.ANCHOR_CENTER,
@@ -168,6 +180,16 @@ fun ExploreScreen(
                                     30
                                 )
 
+                                // 👇 CLICK EN MONSTRUO
+                                marker.setOnMarkerClickListener { _, _ ->
+
+                                    navController.navigate(
+                                        "capture/${spawn.spawnId}/${spawn.monster.id}/${spawn.monster.imageUrl}"
+                                    )
+
+                                    true
+                                }
+
                                 map.overlays.add(marker)
 
                                 val spawnKey = "${spawn.lat}:${spawn.lng}"
@@ -180,21 +202,29 @@ fun ExploreScreen(
                                         vibrateManager.vibrate(500)
 
                                     if (flashManager.hasFlash()) {
+
                                         scope.launch {
                                             flashManager.blink(300)
                                         }
+
                                     }
+
                                 }
+
                             }
 
                             map.invalidate()
+
                         },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
             }
 
+            // =========================
             // CHAT
+            // =========================
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -242,6 +272,7 @@ fun ExploreScreen(
                     }
 
                 }
+
             }
 
         }
