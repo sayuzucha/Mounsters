@@ -50,7 +50,7 @@ android {
             buildConfigField(
                 "String",
                 "BASE_URL",
-                "\"http://10.14.0.68:3000/\""
+                "\"http://192.168.1.150:3000/\""
             )
 
             resValue(

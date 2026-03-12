@@ -153,6 +153,7 @@ fun ExploreScreen(
                             }
                         }
 
+
                         map.invalidate()
                     },
                     modifier = Modifier.fillMaxSize()
