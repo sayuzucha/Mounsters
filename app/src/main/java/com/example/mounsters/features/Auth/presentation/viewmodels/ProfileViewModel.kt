@@ -37,6 +37,7 @@ class ProfileViewModel @Inject constructor(
         loadProfile()
     }
 
+
     private fun loadProfile() {
         viewModelScope.launch {
             try {
