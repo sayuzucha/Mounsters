@@ -11,3 +11,8 @@ data class LoginResponse(
     val token: String,
     val user: UserDto
 )
+
+data class ProfileResponse(
+    val success: Boolean,
+    val user: UserDto
+)

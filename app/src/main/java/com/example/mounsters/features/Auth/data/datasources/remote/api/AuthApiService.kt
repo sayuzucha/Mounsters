@@ -1,6 +1,7 @@
 package com.example.mounsters.features.Auth.data.datasources.remote.api
 
 import com.example.mounsters.features.Auth.data.datasources.remote.models.LoginResponse
+import com.example.mounsters.features.Auth.data.datasources.remote.models.ProfileResponse
 import com.example.mounsters.features.Auth.data.datasources.remote.models.RegisterResponse
 import com.example.mounsters.features.Auth.data.datasources.remote.models.UserDto
 import com.example.mounsters.features.Auth.domain.entities.LoginRequest
@@ -24,7 +25,7 @@ interface AuthApiService {
     ): LoginResponse
 
     @GET("auth/me")
-    suspend fun getProfile(): UserDto
+    suspend fun getProfile(): ProfileResponse
 
     @PUT("auth/me")
     suspend fun updateProfile(

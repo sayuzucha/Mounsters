@@ -4,18 +4,12 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -36,7 +30,6 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 
-// Escalar imágenes de marcadores
 fun getScaledDrawable(
     context: Context,
     resId: Int,
@@ -55,7 +48,6 @@ fun ExploreScreen(
     navController: NavController,
     viewModel: ExploreViewModel = hiltViewModel()
 ) {
-
     val context = LocalContext.current
     val tokenManager = remember { TokenManager(context) }
     val token = tokenManager.getToken() ?: ""
@@ -65,216 +57,96 @@ fun ExploreScreen(
 
     val spawns by viewModel.spawns.collectAsState()
     val loading by viewModel.loading.collectAsState()
-    val messages by viewModel.chatMessages.collectAsState()
 
     val fixedLocation = GeoPoint(16.776, -93.112)
     var userLocation by remember { mutableStateOf(fixedLocation) }
-
     val notifiedSpawns = remember { mutableStateListOf<String>() }
     val scope = rememberCoroutineScope()
-    var chatInput by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-
         viewModel.connectSocket(token)
-
         Configuration.getInstance().userAgentValue = context.packageName
-
         while (true) {
-
             viewModel.loadNearbySpawns(
                 fixedLocation.latitude,
                 fixedLocation.longitude
             )
-
             delay(5000)
-
         }
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Explore Monsters") }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("🗺️ Explorar") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = androidx.compose.ui.graphics.Color(0xFF0F172A),
+                    titleContentColor = androidx.compose.ui.graphics.Color.White
+                )
+            )
+        }
     ) { padding ->
 
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-
-            // =========================
-            // MAPA
-            // =========================
-
-            Box(modifier = Modifier.weight(1f)) {
-
-                if (loading) {
-
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-
-                } else {
-
-                    AndroidView(
-                        factory = { ctx ->
-                            MapView(ctx).apply {
-                                setTileSource(TileSourceFactory.MAPNIK)
-                                setMultiTouchControls(true)
-                                controller.setZoom(17.0)
-                            }
-                        },
-                        update = { map ->
-
-                            map.overlays.clear()
-
-                            userLocation?.let { loc ->
-
-                                val marker = Marker(map)
-
-                                marker.position = loc
-                                marker.title = "You are here"
-
-                                marker.setAnchor(
-                                    Marker.ANCHOR_CENTER,
-                                    Marker.ANCHOR_BOTTOM
-                                )
-
-                                marker.icon = getScaledDrawable(
-                                    context,
-                                    R.drawable.ic_player_location,
-                                    30,
-                                    30
-                                )
-
-                                map.overlays.add(marker)
-
-                                map.controller.setCenter(loc)
-                            }
-
-                            // =========================
-                            // SPAWNS (MONSTRUOS)
-                            // =========================
-
-                            spawns.forEach { spawn: Spawn ->
-
-                                val marker = Marker(map)
-
-                                marker.position = GeoPoint(
-                                    spawn.lat,
-                                    spawn.lng
-                                )
-
-                                marker.title = spawn.monster.name
-                                marker.snippet = "Tap to capture"
-
-                                marker.setAnchor(
-                                    Marker.ANCHOR_CENTER,
-                                    Marker.ANCHOR_BOTTOM
-                                )
-
-                                marker.icon = getScaledDrawable(
-                                    context,
-                                    R.drawable.default_monster,
-                                    30,
-                                    30
-                                )
-
-                                // 👇 CLICK EN MONSTRUO
-                                marker.setOnMarkerClickListener { _, _ ->
-                                    navController.navigate(
-                                        "capture/${spawn.spawnId}/${spawn.monster.id}"
-                                    )
-                                    true
-                                }
-
-                                map.overlays.add(marker)
-
-                                val spawnKey = "${spawn.lat}:${spawn.lng}"
-
-                                if (!notifiedSpawns.contains(spawnKey)) {
-
-                                    notifiedSpawns.add(spawnKey)
-
-                                    if (vibrateManager.hasVibrator())
-                                        vibrateManager.vibrate(500)
-
-                                    if (flashManager.hasFlash()) {
-
-                                        scope.launch {
-                                            flashManager.blink(300)
-                                        }
-
-                                    }
-
-                                }
-
-                            }
-
-                            map.invalidate()
-
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-
-            // =========================
-            // CHAT
-            // =========================
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .background(Color(0xAA000000))
-                    .padding(8.dp)
-            ) {
-
-                LazyColumn(
-                    modifier = Modifier.weight(1f)
-                ) {
-
-                    items(messages) { (player, msg) ->
-
-                        Text(
-                            text = "$player: $msg",
-                            color = Color.White
-                        )
-
-                    }
-
-                }
-
-                Row {
-
-                    BasicTextField(
-                        value = chatInput,
-                        onValueChange = { chatInput = it },
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(Color.White)
-                            .padding(4.dp)
-                    )
-
-                    Button(
-                        onClick = {
-
-                            viewModel.sendChat(chatInput)
-
-                            chatInput = ""
-
+            if (loading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else {
+                AndroidView(
+                    factory = { ctx ->
+                        MapView(ctx).apply {
+                            setTileSource(TileSourceFactory.MAPNIK)
+                            setMultiTouchControls(true)
+                            controller.setZoom(17.0)
                         }
-                    ) {
-                        Text("Enviar")
-                    }
+                    },
+                    update = { map ->
+                        map.overlays.clear()
 
-                }
+                        userLocation?.let { loc ->
+                            val marker = Marker(map)
+                            marker.position = loc
+                            marker.title = "You are here"
+                            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            marker.icon = getScaledDrawable(context, R.drawable.ic_player_location, 30, 30)
+                            map.overlays.add(marker)
+                            map.controller.setCenter(loc)
+                        }
 
+                        spawns.forEach { spawn: Spawn ->
+                            val marker = Marker(map)
+                            marker.position = GeoPoint(spawn.lat, spawn.lng)
+                            marker.title = spawn.monster.name
+                            marker.snippet = "Tap to capture"
+                            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            marker.icon = getScaledDrawable(context, R.drawable.default_monster, 30, 30)
+
+                            marker.setOnMarkerClickListener { _, _ ->
+                                navController.navigate(
+                                    "capture/${spawn.spawnId}/${spawn.monster.id}"
+                                )
+                                true
+                            }
+
+                            map.overlays.add(marker)
+
+                            val spawnKey = "${spawn.lat}:${spawn.lng}"
+                            if (!notifiedSpawns.contains(spawnKey)) {
+                                notifiedSpawns.add(spawnKey)
+                                if (vibrateManager.hasVibrator()) vibrateManager.vibrate(500)
+                                if (flashManager.hasFlash()) {
+                                    scope.launch { flashManager.blink(300) }
+                                }
+                            }
+                        }
+                        map.invalidate()
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
-
         }
-
     }
-
 }
