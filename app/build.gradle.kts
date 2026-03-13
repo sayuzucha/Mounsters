@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -96,4 +97,16 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.3")
     implementation("com.auth0.android:jwtdecode:2.0.2")
     implementation("org.osmdroid:osmdroid-android:6.1.18")
+    implementation("androidx.camera:camera-camera2:1.3.2")
+    implementation("androidx.camera:camera-lifecycle:1.3.2")
+    implementation("androidx.camera:camera-view:1.3.2")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    // CameraX
+    implementation("androidx.camera:camera-core:1.3.1")
+    implementation("androidx.camera:camera-camera2:1.3.1")
+    implementation("androidx.camera:camera-lifecycle:1.3.1")
+    implementation("androidx.camera:camera-view:1.3.1")
+
+// Accompanist permissions
+    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 }

@@ -1,4 +1,3 @@
-// core/navigation/NavigationWrapper.kt
 package com.example.mounsters.core.navigation
 
 import androidx.compose.runtime.Composable
@@ -18,6 +17,6 @@ fun NavigationWrapper(modifier: Modifier = Modifier) {
         modifier = modifier
     ) {
         AuthNavGraph().registerGraph(this, navController)
-        MonstersNavGraph().registerGraph(this, navController)
+        MonstersNavGraph().registerGraph(this, navController)  // ← ¿está esta línea?
     }
 }
