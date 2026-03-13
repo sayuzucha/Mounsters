@@ -182,11 +182,9 @@ fun ExploreScreen(
 
                                 // 👇 CLICK EN MONSTRUO
                                 marker.setOnMarkerClickListener { _, _ ->
-
                                     navController.navigate(
-                                        "capture/${spawn.spawnId}/${spawn.monster.id}/${spawn.monster.imageUrl}"
+                                        "capture/${spawn.spawnId}/${spawn.monster.id}"
                                     )
-
                                     true
                                 }
 
