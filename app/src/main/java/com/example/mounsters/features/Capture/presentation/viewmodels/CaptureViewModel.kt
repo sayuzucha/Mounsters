@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mounsters.core.hardware.domain.AccelerometerManager
 import com.example.mounsters.core.hardware.domain.VibrateManager
+import com.example.mounsters.core.util.TokenManager
 import com.example.mounsters.features.Capture.data.datasources.remote.models.CaptureRequest
 import com.example.mounsters.features.Capture.domain.usecases.CaptureMonsterUseCase
+import com.example.mounsters.features.Capture.domain.usecases.SaveCaptureToRoomUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,14 +26,15 @@ data class CaptureUiState(
 @HiltViewModel
 class CaptureViewModel @Inject constructor(
     private val captureMonsterUseCase: CaptureMonsterUseCase,
+    private val saveCaptureToRoomUseCase: SaveCaptureToRoomUseCase,
     private val accelerometerManager: AccelerometerManager,
-    private val vibrateManager: VibrateManager
+    private val vibrateManager: VibrateManager,
+    private val tokenManager: TokenManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CaptureUiState())
     val uiState: StateFlow<CaptureUiState> = _uiState.asStateFlow()
 
-    // Inicia el acelerómetro — detecta lanzamiento
     fun startListening(onThrow: () -> Unit) {
         accelerometerManager.startListening {
             _uiState.value = _uiState.value.copy(ballThrown = true)
@@ -57,21 +60,28 @@ class CaptureViewModel @Inject constructor(
             val result = captureMonsterUseCase(
                 CaptureRequest(
                     monsterId = monsterId,
-                    spawnId = spawnId,
-                    lat = lat,
-                    lng = lng,
-                    nickname = nickname
+                    spawnId   = spawnId,
+                    lat       = lat,
+                    lng       = lng,
+                    nickname  = nickname
                 )
             )
 
             result.fold(
-                onSuccess = {   // it es CapturePostResponse
+                onSuccess = { response ->
+                    // Guardar en Room
+                    val userId = tokenManager.getToken() ?: "local_user"
+                    saveCaptureToRoomUseCase(response, userId)
+
                     vibrateManager.vibrate(800)
                     _uiState.value = CaptureUiState(captured = true)
                 },
                 onFailure = { e ->
                     vibrateManager.vibrate(200)
-                    _uiState.value = CaptureUiState(failed = true, error = e.message)
+                    _uiState.value = CaptureUiState(
+                        failed = true,
+                        error  = e.message
+                    )
                 }
             )
         }
