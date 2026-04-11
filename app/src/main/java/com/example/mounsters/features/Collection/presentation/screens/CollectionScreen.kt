@@ -185,7 +185,7 @@ private fun MonsterCell(monster: CapturedMonster, borderColor: Color) {
         ) {
             // Imagen del monstruo
             AsyncImage(
-                model = "http://192.168.1.150:3000${monster.imageUrl}",
+                model = "http://192.168.1.89:3000${monster.imageUrl}",
                 contentDescription = monster.monsterName,
                 error = painterResource(R.drawable.default_monster),
                 placeholder = painterResource(R.drawable.default_monster),

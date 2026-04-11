@@ -59,19 +59,20 @@ fun ExploreScreen(
     val loading by viewModel.loading.collectAsState()
 
     val fixedLocation = GeoPoint(16.776, -93.112)
-    var userLocation by remember { mutableStateOf(fixedLocation) }
+    val userLocation by remember { mutableStateOf(fixedLocation) }
     val notifiedSpawns = remember { mutableStateListOf<String>() }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        viewModel.connectSocket(token)
         Configuration.getInstance().userAgentValue = context.packageName
+        // Conectar WS — al recibir auth_ok automáticamente envía sendLocation
+        viewModel.connectSocket(token)
+        // Carga inicial de spawns
+        viewModel.loadNearbySpawns(fixedLocation.latitude, fixedLocation.longitude)
+        // Polling de respaldo cada 5s (el WS ya notifica spawns nuevos)
         while (true) {
-            viewModel.loadNearbySpawns(
-                fixedLocation.latitude,
-                fixedLocation.longitude
-            )
             delay(5000)
+            viewModel.loadNearbySpawns(fixedLocation.latitude, fixedLocation.longitude)
         }
     }
 
@@ -106,16 +107,16 @@ fun ExploreScreen(
                     update = { map ->
                         map.overlays.clear()
 
-                        userLocation?.let { loc ->
-                            val marker = Marker(map)
-                            marker.position = loc
-                            marker.title = "You are here"
-                            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            marker.icon = getScaledDrawable(context, R.drawable.ic_player_location, 30, 30)
-                            map.overlays.add(marker)
-                            map.controller.setCenter(loc)
-                        }
+                        // Marcador del jugador
+                        val playerMarker = Marker(map)
+                        playerMarker.position = userLocation
+                        playerMarker.title = "You are here"
+                        playerMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        playerMarker.icon = getScaledDrawable(context, R.drawable.ic_player_location, 30, 30)
+                        map.overlays.add(playerMarker)
+                        map.controller.setCenter(userLocation)
 
+                        // Marcadores de spawns
                         spawns.forEach { spawn: Spawn ->
                             val marker = Marker(map)
                             marker.position = GeoPoint(spawn.lat, spawn.lng)
@@ -133,7 +134,8 @@ fun ExploreScreen(
 
                             map.overlays.add(marker)
 
-                            val spawnKey = "${spawn.lat}:${spawn.lng}"
+                            // Vibrar y flash solo para spawns nuevos
+                            val spawnKey = spawn.spawnId
                             if (!notifiedSpawns.contains(spawnKey)) {
                                 notifiedSpawns.add(spawnKey)
                                 if (vibrateManager.hasVibrator()) vibrateManager.vibrate(500)

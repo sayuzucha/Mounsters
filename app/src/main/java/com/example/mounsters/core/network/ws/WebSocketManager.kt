@@ -22,28 +22,22 @@ class WebSocketManager {
     val events: SharedFlow<JSONObject> = _events
 
     fun connect(token: String) {
-
         val request = Request.Builder()
-            .url("ws://192.168.1.150:3001")
+            .url("ws://192.168.1.89:3001")
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
 
             override fun onOpen(webSocket: WebSocket, response: Response) {
-
                 val auth = JSONObject()
                 auth.put("type", "auth")
                 auth.put("token", token)
-
                 webSocket.send(auth.toString())
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-
                 println("WS RECIBIDO: $text")
-
                 val json = JSONObject(text)
-
                 _events.tryEmit(json)
             }
 
@@ -54,12 +48,17 @@ class WebSocketManager {
     }
 
     fun sendChat(message: String) {
-
         val json = JSONObject()
-
         json.put("type", "chat")
         json.put("message", message)
+        webSocket?.send(json.toString())
+    }
 
+    fun sendLocation(lat: Double, lng: Double) {
+        val json = JSONObject()
+        json.put("type", "location")
+        json.put("lat", lat)
+        json.put("lng", lng)
         webSocket?.send(json.toString())
     }
 
