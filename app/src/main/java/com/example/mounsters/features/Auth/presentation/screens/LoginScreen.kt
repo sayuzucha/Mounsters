@@ -1,16 +1,12 @@
 package com.example.mounsters.features.Auth.presentation.screens
 
 import android.content.Context
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,15 +14,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.mounsters.features.Auth.presentation.viewmodels.AuthViewModel
+import com.example.mounsters.R
 import com.example.mounsters.features.Auth.domain.entities.LoginRequest
+import com.example.mounsters.features.Auth.presentation.viewmodels.AuthViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -37,7 +36,6 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
@@ -45,12 +43,11 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // Manejo seguro de SharedPreferences y navegación
     LaunchedEffect(uiState.user) {
         uiState.user?.let { user ->
             withContext(Dispatchers.IO) {
                 val prefs = context.getSharedPreferences("MonsterPrefs", Context.MODE_PRIVATE)
-                prefs.edit().putString("username", user.username ?: "Player").apply()
+                prefs.edit().putString("username", user.username).apply()
             }
             onLoginSuccess()
         }
@@ -59,119 +56,201 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        Color(0xFF0F172A),
-                        Color(0xFF1E1B4B),
-                        Color(0xFF312E81)
-                    )
-                )
-            )
+            .background(Color(0xFF060D1F))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
+                .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
 
-            Text(
-                text = "MONSTER HUNT",
-                fontSize = 36.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White
+            // ÍCONO
+            Image(
+                painter = painterResource(id = R.drawable.dragonking),
+                contentDescription = "Monster Icon",
+                modifier = Modifier.size(90.dp)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // TÍTULO
+            Text(
+                text = "BIENVENIDO",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 4.sp,
+                color = Color(0xFF00E5FF),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Capture creatures around you",
-                color = Color.LightGray
+                text = "Inicia sesión para cazar criaturas",
+                fontSize = 13.sp,
+                color = Color(0xFF64748B),
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            Card(
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-                modifier = Modifier.fillMaxWidth()
+            // EMAIL
+            Text(
+                text = "EMAIL",
+                fontSize = 11.sp,
+                letterSpacing = 2.sp,
+                color = Color(0xFF64748B),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 6.dp)
+            )
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF00E5FF),
+                    unfocusedBorderColor = Color(0xFF1E293B),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color(0xFF00E5FF),
+                    focusedContainerColor = Color(0xFF0F172A),
+                    unfocusedContainerColor = Color(0xFF0F172A)
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // CONTRASEÑA
+            Text(
+                text = "CONTRASEÑA",
+                fontSize = 11.sp,
+                letterSpacing = 2.sp,
+                color = Color(0xFF64748B),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 6.dp)
+            )
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                visualTransformation = if (passwordVisible)
+                    VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    TextButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Text(
+                            if (passwordVisible) "ocultar" else "ver",
+                            color = Color(0xFF00E5FF),
+                            fontSize = 11.sp
+                        )
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF00E5FF),
+                    unfocusedBorderColor = Color(0xFF1E293B),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color(0xFF00E5FF),
+                    focusedContainerColor = Color(0xFF0F172A),
+                    unfocusedContainerColor = Color(0xFF0F172A)
+                )
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // BOTÓN LOGIN
+            Button(
+                onClick = {
+                    if (email.isNotBlank() && password.isNotBlank()) {
+                        viewModel.login(LoginRequest(email, password))
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(12.dp),
+                enabled = !uiState.isLoading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                contentPadding = PaddingValues(0.dp)
             ) {
-                Column(modifier = Modifier.padding(24.dp)) {
-
-                    Text(
-                        text = "Login",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email") },
-                        leadingIcon = { Icon(Icons.Default.Email, null) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Password") },
-                        leadingIcon = { Icon(Icons.Default.Lock, null) },
-                        trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = null
-                                )
-                            }
-                        },
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Button(
-                        onClick = {
-                            if (email.isNotBlank() && password.isNotBlank()) {
-                                viewModel.login(LoginRequest(email, password))
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        enabled = !uiState.isLoading // ❌ evita multiples clicks
-                    ) {
-                        if (uiState.isLoading) {
-                            CircularProgressIndicator(color = Color.White)
-                        } else {
-                            Text("Login", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-                        Text("No account?", color = Color.LightGray)
-                        TextButton(onClick = onNavigateToRegister) {
-                            Text("Register", fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    uiState.error?.let {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(text = it, color = Color.Red)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFF00B4CC), Color(0xFF00E5FF))
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    } else {
+                        Text(
+                            text = "ENTRAR AL JUEGO",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 3.sp,
+                            color = Color(0xFF060D1F)
+                        )
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // DIVISOR
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF1E293B))
+                Text("  o  ", color = Color(0xFF64748B), fontSize = 12.sp)
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF1E293B))
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // BOTÓN REGISTRO
+            OutlinedButton(
+                onClick = onNavigateToRegister,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E293B))
+            ) {
+                Text(
+                    text = "¿No tienes cuenta? Regístrate",
+                    color = Color(0xFF94A3B8),
+                    fontSize = 13.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            TextButton(onClick = { }) {
+                Text(
+                    text = "¿Olvidaste tu contraseña?",
+                    color = Color(0xFF64748B),
+                    fontSize = 12.sp
+                )
+            }
+
+            uiState.error?.let {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = it, color = Color.Red, fontSize = 13.sp)
             }
         }
     }

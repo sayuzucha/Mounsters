@@ -7,6 +7,7 @@ import com.example.mounsters.core.navigation.FeatureNavGraph
 import com.example.mounsters.core.navigation.NavigationRoutes
 import com.example.mounsters.features.Auth.presentation.screens.AuthScreen
 import com.example.mounsters.features.Auth.presentation.screens.LoginScreen
+import com.example.mounsters.features.Auth.presentation.screens.SplashScreen
 
 class AuthNavGraph : FeatureNavGraph {
 
@@ -15,8 +16,19 @@ class AuthNavGraph : FeatureNavGraph {
         navController: NavHostController
     ) {
 
-        navGraphBuilder.composable(NavigationRoutes.LOGIN) {
+        // SPLASH
+        navGraphBuilder.composable(NavigationRoutes.SPLASH) {
+            SplashScreen(
+                onSplashFinished = {
+                    navController.navigate(NavigationRoutes.LOGIN) {
+                        popUpTo(NavigationRoutes.SPLASH) { inclusive = true }
+                    }
+                }
+            )
+        }
 
+        // LOGIN
+        navGraphBuilder.composable(NavigationRoutes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate(NavigationRoutes.HOME) {
@@ -24,20 +36,18 @@ class AuthNavGraph : FeatureNavGraph {
                     }
                 },
                 onNavigateToRegister = {
-                    navController.navigate(NavigationRoutes.AUTH)
+                    navController.navigate(NavigationRoutes.AUTH)  // ← esta ruta debe existir
                 }
             )
-
         }
 
+        // REGISTRO
         navGraphBuilder.composable(NavigationRoutes.AUTH) {
-
             AuthScreen(
                 onRegisterSuccess = {
                     navController.popBackStack()
                 }
             )
-
         }
     }
 }

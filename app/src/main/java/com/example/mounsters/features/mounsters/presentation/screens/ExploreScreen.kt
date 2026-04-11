@@ -1,39 +1,40 @@
 package com.example.mounsters.features.mounsters.presentation.screens
 
-import androidx.compose.foundation.background
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.example.mounsters.R
+import com.example.mounsters.core.hardware.data.AndroidFlashManager
+import com.example.mounsters.core.hardware.data.AndroidVibrateManager
+import com.example.mounsters.core.hardware.domain.FlashManager
+import com.example.mounsters.core.hardware.domain.VibrateManager
+import com.example.mounsters.core.util.TokenManager
 import com.example.mounsters.features.mounsters.domain.entities.Spawn
-import com.example.mounsters.features.mounsters.presentation.components.SpawnItem
 import com.example.mounsters.features.mounsters.presentation.viewmodels.ExploreViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import com.example.mounsters.R
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
-
 
 fun getScaledDrawable(
     context: Context,
     resId: Int,
-    width: Int = 80,    // ancho deseado en px
-    height: Int = 80    // alto deseado en px
+    width: Int = 80,
+    height: Int = 80
 ): Drawable? {
     val drawable = ContextCompat.getDrawable(context, resId) ?: return null
     val bitmap = (drawable as BitmapDrawable).bitmap
@@ -44,24 +45,49 @@ fun getScaledDrawable(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreScreen(
+    navController: NavController,
     viewModel: ExploreViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    val tokenManager = remember { TokenManager(context) }
+    val token = tokenManager.getToken() ?: ""
+
+    val vibrateManager: VibrateManager = remember { AndroidVibrateManager(context) }
+    val flashManager: FlashManager = remember { AndroidFlashManager(context) }
+
     val spawns by viewModel.spawns.collectAsState()
     val loading by viewModel.loading.collectAsState()
-    val context = LocalContext.current
 
     val fixedLocation = GeoPoint(16.776, -93.112)
-    var userLocation by remember { mutableStateOf(fixedLocation) }
+    val userLocation by remember { mutableStateOf(fixedLocation) }
+    val notifiedSpawns = remember { mutableStateListOf<String>() }
+    val scope = rememberCoroutineScope()
 
-    // Inicializar osmdroid y cargar spawns
     LaunchedEffect(Unit) {
         Configuration.getInstance().userAgentValue = context.packageName
+        // Conectar WS — al recibir auth_ok automáticamente envía sendLocation
+        viewModel.connectSocket(token)
+        // Carga inicial de spawns
         viewModel.loadNearbySpawns(fixedLocation.latitude, fixedLocation.longitude)
+        // Polling de respaldo cada 5s (el WS ya notifica spawns nuevos)
+        while (true) {
+            delay(5000)
+            viewModel.loadNearbySpawns(fixedLocation.latitude, fixedLocation.longitude)
+        }
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Explore Monsters") }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("🗺️ Explorar") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = androidx.compose.ui.graphics.Color(0xFF0F172A),
+                    titleContentColor = androidx.compose.ui.graphics.Color.White
+                )
+            )
+        }
     ) { padding ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -82,69 +108,46 @@ fun ExploreScreen(
                         map.overlays.clear()
 
                         // Marcador del jugador
-                        userLocation?.let { loc ->
-                            val playerMarker = Marker(map)
-                            playerMarker.position = loc
-                            playerMarker.title = "You are here"
-                            playerMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            playerMarker.icon = getScaledDrawable(context, R.drawable.ic_player_location, 30, 30)
-                            map.overlays.add(playerMarker)
-                            map.controller.setCenter(loc)
-                        }
+                        val playerMarker = Marker(map)
+                        playerMarker.position = userLocation
+                        playerMarker.title = "You are here"
+                        playerMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        playerMarker.icon = getScaledDrawable(context, R.drawable.ic_player_location, 30, 30)
+                        map.overlays.add(playerMarker)
+                        map.controller.setCenter(userLocation)
 
-                        // Marcadores de spawns con imagenes locales
-                        spawns.forEach { spawn ->
+                        // Marcadores de spawns
+                        spawns.forEach { spawn: Spawn ->
                             val marker = Marker(map)
                             marker.position = GeoPoint(spawn.lat, spawn.lng)
                             marker.title = spawn.monster.name
+                            marker.snippet = "Tap to capture"
                             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            marker.icon = getScaledDrawable(context, R.drawable.default_monster, 30, 30)
 
-                            // Asignar imagen según el nombre del monstruo
-                            marker.icon = when (spawn.monster.name) {
-                                "FlameWolf" -> getScaledDrawable(context, R.drawable.flamewolf, 30, 30)
-                                "AquaSerpent" -> getScaledDrawable(context, R.drawable.aquaserpent, 30, 30)
-                                "VineGolem" -> getScaledDrawable(context, R.drawable.vinegolem, 30, 30)
-                                "ThunderBat" -> getScaledDrawable(context, R.drawable.thunderbat, 30, 30)
-                                "StoneBear" -> getScaledDrawable(context, R.drawable.stonebear, 30, 30)
-                                "IceFox" -> getScaledDrawable(context, R.drawable.icefox, 30, 30)
-                                "ShadowCat" -> getScaledDrawable(context, R.drawable.shadowcat, 30, 30)
-                                "DragonKing" -> getScaledDrawable(context, R.drawable.dragonking, 30, 30)
-                                else -> getScaledDrawable(context, R.drawable.default_monster, 30, 30)
+                            marker.setOnMarkerClickListener { _, _ ->
+                                navController.navigate(
+                                    "capture/${spawn.spawnId}/${spawn.monster.id}"
+                                )
+                                true
                             }
 
                             map.overlays.add(marker)
-                        }
 
+                            // Vibrar y flash solo para spawns nuevos
+                            val spawnKey = spawn.spawnId
+                            if (!notifiedSpawns.contains(spawnKey)) {
+                                notifiedSpawns.add(spawnKey)
+                                if (vibrateManager.hasVibrator()) vibrateManager.vibrate(500)
+                                if (flashManager.hasFlash()) {
+                                    scope.launch { flashManager.blink(300) }
+                                }
+                            }
+                        }
                         map.invalidate()
                     },
                     modifier = Modifier.fillMaxSize()
                 )
-
-                // Lista inferior de spawns
-                if (spawns.isNotEmpty()) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .align(Alignment.BottomCenter)
-                            .background(Color(0xAA000000)),
-                        contentPadding = PaddingValues(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        items(spawns) { spawn: Spawn ->
-                            SpawnItem(spawn)
-                        }
-                    }
-                } else {
-                    Text(
-                        text = "No monsters nearby",
-                        color = Color.White,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .background(Color(0xAA000000))
-                            .padding(16.dp)
-                    )
-                }
             }
         }
     }

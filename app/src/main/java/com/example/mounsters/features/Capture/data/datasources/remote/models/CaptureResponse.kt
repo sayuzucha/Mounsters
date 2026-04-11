@@ -1,9 +1,16 @@
 package com.example.mounsters.features.Capture.data.datasources.remote.models
 
+// GET /captures → devuelve lista
 data class CaptureResponse(
     val success: Boolean,
     val total: Int?,
     val data: List<Capture>? = null
+)
+
+// POST /captures → devuelve objeto único
+data class CapturePostResponse(
+    val success: Boolean,
+    val data: Capture? = null
 )
 
 data class Capture(
