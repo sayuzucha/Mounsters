@@ -6,6 +6,7 @@ import com.example.mounsters.features.Auth.data.datasources.remote.models.Regist
 import com.example.mounsters.features.Auth.data.datasources.remote.models.UserDto
 import com.example.mounsters.features.Auth.domain.entities.LoginRequest
 import com.example.mounsters.features.Auth.domain.entities.RegisterRequest
+import com.example.mounsters.features.Notifications.data.datasources.remote.models.BaseResponse
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -34,4 +35,10 @@ interface AuthApiService {
 
     @DELETE("auth/me")
     suspend fun deleteAccount(): Map<String, Any>
+
+    @POST("auth/fcm-token")
+    suspend fun updateFcmToken(@Body body: Map<String, String>): BaseResponse
+
+
 }
+

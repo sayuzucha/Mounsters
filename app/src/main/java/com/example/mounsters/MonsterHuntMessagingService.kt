@@ -7,13 +7,21 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import com.example.mounsters.core.network.ApiService
+import com.example.mounsters.features.Alerts.data.datasources.remote.models.CreateAlertRequest
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MonsterHuntMessagingService : FirebaseMessagingService() {
+
+    @Inject
+    lateinit var apiService: ApiService
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
@@ -23,13 +31,37 @@ class MonsterHuntMessagingService : FirebaseMessagingService() {
         val type        = remoteMessage.data["type"] ?: "GENERAL"
         val monsterName = remoteMessage.data["monsterName"] ?: ""
 
+        // 👇 Guarda la alerta en tu backend
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                apiService.createAlert(
+                    CreateAlertRequest(
+                        title       = title,
+                        body        = body,
+                        type        = type,
+                        monsterName = monsterName
+                    )
+                )
+            } catch (e: Exception) {
+                android.util.Log.e("FCM", "Error guardando alerta: ${e.message}")
+            }
+        }
+
         showNotification(title, body, type)
     }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        // Aquí enviarás el token a tu API
         android.util.Log.d("FCM", "Token nuevo: $token")
+
+        // 👇 Guarda el token en el backend
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                apiService.updateFcmToken(mapOf("token" to token))
+            } catch (e: Exception) {
+                android.util.Log.e("FCM", "Error guardando token: ${e.message}")
+            }
+        }
     }
 
     private fun showNotification(title: String, body: String, type: String) {
@@ -42,7 +74,6 @@ class MonsterHuntMessagingService : FirebaseMessagingService() {
 
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Crear canales (Android 8+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             listOf(
                 Triple("spawn_channel",   "Llegada de Monstruos", "Alertas cuando aparece un monstruo"),
@@ -57,7 +88,6 @@ class MonsterHuntMessagingService : FirebaseMessagingService() {
             }
         }
 
-        // Intent para abrir la app al tocar la notificación
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         }

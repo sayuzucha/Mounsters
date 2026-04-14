@@ -80,6 +80,9 @@ interface ApiService {
         @Body request: CaptureRequest
     ): CaptureResponse
 
+    @POST("auth/fcm-token")
+    suspend fun updateFcmToken(@Body body: Map<String, String>): BaseResponse
+
 
     // NOTIFICATIONS
     @GET("notifications")

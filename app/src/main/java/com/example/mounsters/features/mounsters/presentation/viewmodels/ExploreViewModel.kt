@@ -27,135 +27,105 @@ class ExploreViewModel @Inject constructor(
     private var myUsername: String? = null
 
     private val _chatMessages =
-        MutableStateFlow<List<Pair<String,String>>>(emptyList())
+        MutableStateFlow<List<Pair<String, String>>>(emptyList())
 
-    val chatMessages: StateFlow<List<Pair<String,String>>> =
+    val chatMessages: StateFlow<List<Pair<String, String>>> =
         _chatMessages.asStateFlow()
 
     init {
-        _chatMessages.value =
-            listOf("System" to "Bienvenido al chat")
+        _chatMessages.value = listOf("System" to "Bienvenido al chat")
     }
 
     fun connectSocket(token: String) {
         println("WS: intentando conectar")
-
         wsManager.connect(token)
 
         viewModelScope.launch {
-
             wsManager.events.collect { json: JSONObject ->
-
-                when(json.getString("type")) {
+                when (json.getString("type")) {
 
                     // =========================
-                    // AUTH OK
+                    // AUTH OK — enviar ubicación
                     // =========================
-
                     "auth_ok" -> {
-
                         val user = json.getJSONObject("user")
                         myUsername = user.getString("username")
-
                         _chatMessages.value =
-                            _chatMessages.value +
-                                    ("System" to "Conectado como $myUsername")
+                            _chatMessages.value + ("System" to "Conectado como $myUsername")
 
+                        // 👇 LÍNEA CLAVE — sin esto el servidor no genera spawns
+                        wsManager.sendLocation(16.776, -93.112)
                     }
 
                     // =========================
                     // CHAT
                     // =========================
-
                     "chat" -> {
-
                         val player = json.getString("player")
                         val message = json.getString("message")
-
-                        val displayName =
-                            if(player == myUsername) "Yo" else player
-
+                        val displayName = if (player == myUsername) "Yo" else player
                         _chatMessages.value =
-                            _chatMessages.value +
-                                    (displayName to message)
-
+                            _chatMessages.value + (displayName to message)
                     }
 
                     // =========================
-                    // SPAWN
+                    // SPAWN — recargar spawns cercanos
                     // =========================
-
                     "spawn" -> {
-
-                        val lat = json.getDouble("lat")
-                        val lng = json.getDouble("lng")
-
+                        val lat = json.optDouble("lat", 16.776)
+                        val lng = json.optDouble("lng", -93.112)
                         loadNearbySpawns(lat, lng)
+                    }
 
+                    // =========================
+                    // SPAWN EXPIRADO — recargar
+                    // =========================
+                    "spawn_expired" -> {
+                        loadNearbySpawns(16.776, -93.112)
                     }
                 }
-
             }
-
         }
-
     }
 
     fun sendChat(message: String) {
-
         wsManager.sendChat(message)
-
     }
 
+    fun sendLocation(lat: Double, lng: Double) {
+        wsManager.sendLocation(lat, lng)
+    }
 
     // ==============================
-    // SPAWNS (TU CÓDIGO ORIGINAL)
+    // SPAWNS
     // ==============================
 
-    private val _spawns =
-        MutableStateFlow<List<Spawn>>(emptyList())
+    private val _spawns = MutableStateFlow<List<Spawn>>(emptyList())
+    val spawns: StateFlow<List<Spawn>> = _spawns.asStateFlow()
 
-    val spawns: StateFlow<List<Spawn>> =
-        _spawns.asStateFlow()
-
-    private val _loading =
-        MutableStateFlow(false)
-
-    val loading: StateFlow<Boolean> =
-        _loading.asStateFlow()
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
     fun loadNearbySpawns(
         lat: Double,
         lng: Double,
         radius: Int = 500
     ) {
-
         viewModelScope.launch {
-
             _loading.value = true
-
             try {
-
-                val result = getNearbySpawnsUseCase(
-                    lat = lat,
-                    lng = lng,
-                    radius = radius
-                )
-
+                val result = getNearbySpawnsUseCase(lat = lat, lng = lng, radius = radius)
                 _spawns.value = result
-
             } catch (e: Exception) {
-
                 e.printStackTrace()
-
             } finally {
-
                 _loading.value = false
-
             }
-
         }
-
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        wsManager.close()
+    }
 }
