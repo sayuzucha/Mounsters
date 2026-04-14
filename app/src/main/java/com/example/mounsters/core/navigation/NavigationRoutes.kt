@@ -13,5 +13,7 @@ object NavigationRoutes {
         const val CAMERA     = "camera"
         const val MONSTERS   = "monsters"
 
+        const val BATTLE = "battle/{monsterId}/{monsterName}"
+
     const val CAPTURE = "capture/{spawnId}/{monsterId}"
 }

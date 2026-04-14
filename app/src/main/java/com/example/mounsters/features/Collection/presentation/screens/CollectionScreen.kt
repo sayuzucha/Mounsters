@@ -2,6 +2,7 @@ package com.example.mounsters.features.Collection.presentation.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.mounsters.R
 import com.example.mounsters.features.Collection.domain.entities.CapturedMonster
@@ -28,6 +30,7 @@ import com.example.mounsters.features.Collection.presentation.viewmodels.Collect
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionScreen(
+    navController: NavController,
     viewModel: CollectionViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -74,10 +77,16 @@ fun CollectionScreen(
                 }
 
                 // GRID DE MONSTRUOS
+
                 items(uiState.monsters) { monster ->
                     MonsterCell(
-                        monster = monster,
-                        borderColor = rarityColor[monster.monsterRarity] ?: Color(0xFF1E293B)
+                        monster     = monster,
+                        borderColor = rarityColor[monster.monsterRarity] ?: Color(0xFF1E293B),
+                        onClick     = {
+                            navController.navigate(
+                                "battle/${monster.monsterId}/${monster.monsterName}"
+                            )
+                        }
                     )
                 }
 
@@ -160,13 +169,14 @@ private fun StatCard(value: String, label: String, color: Color, modifier: Modif
 }
 
 @Composable
-private fun MonsterCell(monster: CapturedMonster, borderColor: Color) {
+private fun MonsterCell(monster: CapturedMonster, borderColor: Color, onClick: () -> Unit ) {
     Box(
         modifier = Modifier
             .aspectRatio(0.8f)
             .clip(RoundedCornerShape(12.dp))
             .background(Color(0xFF0F172A))
             .border(1.dp, borderColor.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+            .clickable { onClick() }
             .padding(8.dp)
     ) {
         // Nivel arriba a la derecha

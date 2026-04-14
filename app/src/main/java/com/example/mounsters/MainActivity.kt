@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import com.example.mounsters.core.navigation.NavigationWrapper
 import com.example.mounsters.core.ui.theme.MounstersTheme
 import dagger.hilt.android.AndroidEntryPoint
+import com.google.firebase.messaging.FirebaseMessaging
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -19,6 +21,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                android.util.Log.d("FCM_TOKEN", "Token: $token")
+            }
+        }
 
         setContent {
             MounstersTheme {
