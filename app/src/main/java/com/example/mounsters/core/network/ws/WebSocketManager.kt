@@ -61,6 +61,13 @@ class WebSocketManager {
         json.put("lng", lng)
         webSocket?.send(json.toString())
     }
+    fun sendLocation(lat: Double, lng: Double) {
+        val json = JSONObject()
+        json.put("type", "location")
+        json.put("lat", lat)
+        json.put("lng", lng)
+        webSocket?.send(json.toString())
+    }
 
     fun close() {
         webSocket?.close(1000, "Closed")

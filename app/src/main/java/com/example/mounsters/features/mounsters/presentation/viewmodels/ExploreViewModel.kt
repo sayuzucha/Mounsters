@@ -53,7 +53,7 @@ class ExploreViewModel @Inject constructor(
                         _chatMessages.value =
                             _chatMessages.value + ("System" to "Conectado como $myUsername")
 
-                        // Enviar ubicación fija para que el servidor genere spawns cerca
+                        // 👇 LÍNEA CLAVE — sin esto el servidor no genera spawns
                         wsManager.sendLocation(16.776, -93.112)
                     }
 
@@ -72,7 +72,9 @@ class ExploreViewModel @Inject constructor(
                     // SPAWN — recargar spawns cercanos
                     // =========================
                     "spawn" -> {
-                        loadNearbySpawns(16.776, -93.112)
+                        val lat = json.optDouble("lat", 16.776)
+                        val lng = json.optDouble("lng", -93.112)
+                        loadNearbySpawns(lat, lng)
                     }
 
                     // =========================

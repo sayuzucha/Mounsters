@@ -11,7 +11,11 @@ import com.example.mounsters.features.Capture.data.datasources.remote.models.Cap
 import com.example.mounsters.features.Notifications.data.datasources.remote.models.BaseResponse
 import com.example.mounsters.features.Notifications.data.datasources.remote.models.NotificationResponse
 
-
+import com.example.mounsters.features.Alerts.data.datasources.remote.models.AlertResponse
+import com.example.mounsters.features.Alerts.data.datasources.remote.models.UnreadCountResponse
+import com.example.mounsters.features.Alerts.data.datasources.remote.models.CreateAlertRequest
+import com.example.mounsters.features.Collection.data.datasources.remote.models.LevelUpRequest
+import com.example.mounsters.features.Collection.data.datasources.remote.models.LevelUpResponse
 
 
 import com.example.mounsters.features.mounsters.data.datasources.remote.models.MonsterResponse
@@ -19,6 +23,7 @@ import com.example.mounsters.features.mounsters.data.datasources.remote.models.S
 
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -75,6 +80,9 @@ interface ApiService {
         @Body request: CaptureRequest
     ): CaptureResponse
 
+    @POST("auth/fcm-token")
+    suspend fun updateFcmToken(@Body body: Map<String, String>): BaseResponse
+
 
     // NOTIFICATIONS
     @GET("notifications")
@@ -84,4 +92,31 @@ interface ApiService {
 
     @PUT("notifications/read-all")
     suspend fun markAllNotificationsRead(): BaseResponse
+
+    // ALERTS
+    @GET("alerts")
+    suspend fun getAlerts(): AlertResponse
+
+    @GET("alerts/unread-count")
+    suspend fun getUnreadCount(): UnreadCountResponse
+
+    @PUT("alerts/read-all")
+    suspend fun markAllAlertsRead(): BaseResponse
+
+    @PUT("alerts/{id}/read")
+    suspend fun markAlertAsRead(
+        @Path("id") id: String
+    ): BaseResponse
+
+    @POST("alerts")
+    suspend fun createAlert(
+        @Body request: CreateAlertRequest
+    ): BaseResponse
+
+    @PATCH("monsters/{id}/levelup")
+    suspend fun levelUpMonster(
+        @Path("id") id: String,
+        @Body body: LevelUpRequest
+    ): LevelUpResponse
+
 }

@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.mounsters" />
+                  <option name="mobileSdkAppId" value="1:117902392890:android:1c7760b22ce8a91b643f03" />
+                  <option name="projectId" value="monster-hunt-140ad" />
+                  <option name="projectNumber" value="117902392890" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

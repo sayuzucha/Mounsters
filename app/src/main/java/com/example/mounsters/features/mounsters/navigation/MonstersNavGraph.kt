@@ -1,10 +1,5 @@
 package com.example.mounsters.features.mounsters.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -12,11 +7,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.mounsters.core.navigation.FeatureNavGraph
 import com.example.mounsters.core.navigation.NavigationRoutes
+import com.example.mounsters.features.Alerts.presentation.screens.AlertsScreen
 import com.example.mounsters.features.Auth.presentation.screens.ProfileScreen
+import com.example.mounsters.features.Battle.presentation.screens.BattleScreen
 import com.example.mounsters.features.Capture.presentation.screens.CaptureScreen
-import com.example.mounsters.features.mounsters.presentation.screens.ExploreScreen
-import com.example.mounsters.features.mounsters.presentation.screens.ChatScreen
 import com.example.mounsters.features.Collection.presentation.screens.CollectionScreen
+import com.example.mounsters.features.mounsters.presentation.screens.ChatScreen
+import com.example.mounsters.features.mounsters.presentation.screens.ExploreScreen
 
 class MonstersNavGraph : FeatureNavGraph {
 
@@ -24,15 +21,12 @@ class MonstersNavGraph : FeatureNavGraph {
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController
     ) {
-
         navGraphBuilder.composable(NavigationRoutes.HOME) {
             ExploreScreen(navController = navController)
         }
 
         navGraphBuilder.composable(NavigationRoutes.MAP) { }
-
         navGraphBuilder.composable(NavigationRoutes.CAMERA) { }
-
         navGraphBuilder.composable(NavigationRoutes.MONSTERS) { }
 
         navGraphBuilder.composable(
@@ -44,7 +38,6 @@ class MonstersNavGraph : FeatureNavGraph {
         ) { backStackEntry ->
             val spawnId   = backStackEntry.arguments?.getString("spawnId")   ?: ""
             val monsterId = backStackEntry.arguments?.getString("monsterId") ?: ""
-
             CaptureScreen(
                 spawnId       = spawnId,
                 monsterId     = monsterId,
@@ -52,8 +45,24 @@ class MonstersNavGraph : FeatureNavGraph {
             )
         }
 
+        navGraphBuilder.composable(
+            route = NavigationRoutes.BATTLE,
+            arguments = listOf(
+                navArgument("monsterId")   { type = NavType.StringType },
+                navArgument("monsterName") { type = NavType.StringType }
+            )
+        ) { backStack ->
+            val monsterId   = backStack.arguments?.getString("monsterId")   ?: ""
+            val monsterName = backStack.arguments?.getString("monsterName") ?: ""
+            BattleScreen(
+                monsterId   = monsterId,
+                monsterName = monsterName,
+                onBack      = { navController.popBackStack() }
+            )
+        }
+
         navGraphBuilder.composable(NavigationRoutes.COLLECTION) {
-            CollectionScreen()
+            CollectionScreen(navController = navController)
         }
 
         navGraphBuilder.composable(NavigationRoutes.CHAT) {
@@ -61,9 +70,7 @@ class MonstersNavGraph : FeatureNavGraph {
         }
 
         navGraphBuilder.composable(NavigationRoutes.ALERTS) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Alertas próximamente")
-            }
+            AlertsScreen()
         }
 
         navGraphBuilder.composable(NavigationRoutes.PROFILE) {

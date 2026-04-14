@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "117902392890",
+    "project_id": "monster-hunt-140ad",
+    "storage_bucket": "monster-hunt-140ad.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:117902392890:android:1c7760b22ce8a91b643f03",
+        "android_client_info": {
+          "package_name": "com.example.mounsters"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArF066HyXw5HhBLhPHEjleJmXQaYvbvxE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
