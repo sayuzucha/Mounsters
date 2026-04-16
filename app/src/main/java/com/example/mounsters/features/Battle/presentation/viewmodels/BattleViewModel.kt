@@ -21,7 +21,12 @@ data class Trophy(
 sealed class BattleState {
     object Idle : BattleState()
     object SelectingTrophy : BattleState()
-    object Fighting : BattleState()
+
+    data class Fighting(
+        val step: Int = 0,
+        val msg: String = "Preparando batalla..."
+    ) : BattleState()
+
     data class Victory(val newLevel: Int, val trophyValue: Int) : BattleState()
     data class Error(val msg: String) : BattleState()
 }
@@ -47,12 +52,18 @@ class BattleViewModel @Inject constructor(
         )
     }
 
-    fun startBattle(monsterId: String, monsterName: String,
-                    userLat: Double, userLng: Double) {
+    fun startBattle(
+        monsterId: String,
+        monsterName: String,
+        userLat: Double,
+        userLng: Double
+    ) {
         val trophies = _uiState.value.trophies
         val nearest  = nearestTrophy(userLat, userLng, trophies)
 
-        _uiState.value = _uiState.value.copy(battleState = BattleState.Fighting)
+        _uiState.value = _uiState.value.copy(
+            battleState = BattleState.Fighting()
+        )
 
         val request = TrophyWorker.buildRequest(monsterId, monsterName, nearest.value)
 
@@ -65,16 +76,43 @@ class BattleViewModel @Inject constructor(
         viewModelScope.launch {
             workManager.getWorkInfoByIdFlow(request.id).collect { info ->
                 when (info?.state) {
+
+                    WorkInfo.State.ENQUEUED -> {
+                        // Esperando internet u otras constraints
+                        _uiState.value = _uiState.value.copy(
+                            battleState = BattleState.Fighting(
+                                step = 0,
+                                msg  = "⏳ Esperando conexión a internet..."
+                            )
+                        )
+                    }
+
+                    WorkInfo.State.RUNNING -> {
+                        val step = info.progress.getInt(TrophyWorker.PROGRESS_STEP, 0)
+                        val msg  = info.progress.getString(TrophyWorker.PROGRESS_MSG)
+                            ?: "Preparando batalla..."
+                        _uiState.value = _uiState.value.copy(
+                            battleState = BattleState.Fighting(step = step, msg = msg)
+                        )
+                    }
+
                     WorkInfo.State.SUCCEEDED -> {
+                        val trophyVal = info.outputData.getInt(
+                            TrophyWorker.KEY_TROPHY_VALUE, nearest.value
+                        )
                         _uiState.value = _uiState.value.copy(
-                            battleState = BattleState.Victory(0, nearest.value)
+                            battleState = BattleState.Victory(0, trophyVal)
                         )
                     }
+
                     WorkInfo.State.FAILED -> {
+                        val error = info.outputData.getString(TrophyWorker.KEY_ERROR)
+                            ?: "La batalla falló"
                         _uiState.value = _uiState.value.copy(
-                            battleState = BattleState.Error("La batalla falló")
+                            battleState = BattleState.Error(error)
                         )
                     }
+
                     else -> Unit
                 }
             }

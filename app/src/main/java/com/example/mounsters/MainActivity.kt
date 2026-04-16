@@ -29,7 +29,6 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
-        // 👇 Obtiene y guarda el token FCM en el backend al abrir la app
         FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
             android.util.Log.d("FCM_TOKEN", "Token: $token")
             CoroutineScope(Dispatchers.IO).launch {

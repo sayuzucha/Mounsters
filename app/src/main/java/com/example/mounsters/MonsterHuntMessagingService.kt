@@ -31,7 +31,6 @@ class MonsterHuntMessagingService : FirebaseMessagingService() {
         val type        = remoteMessage.data["type"] ?: "GENERAL"
         val monsterName = remoteMessage.data["monsterName"] ?: ""
 
-        // 👇 Guarda la alerta en tu backend
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 apiService.createAlert(
@@ -54,7 +53,6 @@ class MonsterHuntMessagingService : FirebaseMessagingService() {
         super.onNewToken(token)
         android.util.Log.d("FCM", "Token nuevo: $token")
 
-        // 👇 Guarda el token en el backend
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 apiService.updateFcmToken(mapOf("token" to token))

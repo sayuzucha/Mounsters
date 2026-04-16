@@ -18,9 +18,6 @@ class ExploreViewModel @Inject constructor(
     private val getNearbySpawnsUseCase: GetNearbySpawnsUseCase
 ) : ViewModel() {
 
-    // ==============================
-    // WEBSOCKET
-    // ==============================
 
     private val wsManager = WebSocketManager()
 
@@ -44,9 +41,6 @@ class ExploreViewModel @Inject constructor(
             wsManager.events.collect { json: JSONObject ->
                 when (json.getString("type")) {
 
-                    // =========================
-                    // AUTH OK — enviar ubicación
-                    // =========================
                     "auth_ok" -> {
                         val user = json.getJSONObject("user")
                         myUsername = user.getString("username")

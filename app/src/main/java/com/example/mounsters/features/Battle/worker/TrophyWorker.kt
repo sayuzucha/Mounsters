@@ -12,6 +12,8 @@ import com.example.mounsters.features.Collection.data.datasources.remote.models.
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 @HiltWorker
 class TrophyWorker @AssistedInject constructor(
@@ -21,9 +23,14 @@ class TrophyWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     companion object {
-        const val KEY_MONSTER_ID    = "monster_id"
-        const val KEY_MONSTER_NAME  = "monster_name"
-        const val KEY_TROPHY_VALUE  = "trophy_value"
+        const val KEY_MONSTER_ID   = "monster_id"
+        const val KEY_MONSTER_NAME = "monster_name"
+        const val KEY_TROPHY_VALUE = "trophy_value"
+        const val KEY_ERROR        = "error"
+
+        // Claves de progreso
+        const val PROGRESS_STEP = "progress_step"
+        const val PROGRESS_MSG  = "progress_msg"
 
         fun buildRequest(
             monsterId: String,
@@ -39,8 +46,14 @@ class TrophyWorker @AssistedInject constructor(
                 .setInputData(data)
                 .setConstraints(
                     Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED) // espera internet
                         .setRequiresBatteryNotLow(true)
                         .build()
+                )
+                // Si falla por red, reintenta con espera exponencial
+                .setBackoffCriteria(
+                    BackoffPolicy.EXPONENTIAL,
+                    15, TimeUnit.SECONDS
                 )
                 .build()
         }
@@ -51,19 +64,43 @@ class TrophyWorker @AssistedInject constructor(
         val monsterName = inputData.getString(KEY_MONSTER_NAME) ?: return Result.failure()
         val trophyValue = inputData.getInt(KEY_TROPHY_VALUE, 1)
 
-        // Simula el recorrido al trofeo
-        delay(3000)
+        // Paso 1 — caminando
+        setProgress(workDataOf(
+            PROGRESS_STEP to 0,
+            PROGRESS_MSG  to "🚶 $monsterName va al trofeo..."
+        ))
+        delay(2000)
 
-        // Llama al endpoint de la API
+        // Paso 2 — peleando
+        setProgress(workDataOf(
+            PROGRESS_STEP to 1,
+            PROGRESS_MSG  to "⚔️ $monsterName está peleando..."
+        ))
+        delay(1500)
+
+        // Paso 3 — guardando resultado
+        setProgress(workDataOf(
+            PROGRESS_STEP to 2,
+            PROGRESS_MSG  to "📡 Guardando resultado..."
+        ))
+
         return try {
             apiService.levelUpMonster(
                 id   = monsterId,
                 body = LevelUpRequest(trophy_value = trophyValue)
             )
             showNotification(monsterName, trophyValue)
-            Result.success()
+
+            // Devuelve el valor del trofeo para que el ViewModel lo use
+            Result.success(workDataOf(KEY_TROPHY_VALUE to trophyValue))
+
+        } catch (e: IOException) {
+            // Error de red → WorkManager reintentará solo cuando regrese internet
+            Result.retry()
+
         } catch (e: Exception) {
-            Result.failure()
+            // Error desconocido → falla definitiva
+            Result.failure(workDataOf(KEY_ERROR to (e.message ?: "Error desconocido")))
         }
     }
 

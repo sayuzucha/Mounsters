@@ -23,7 +23,7 @@ class WebSocketManager {
 
     fun connect(token: String) {
         val request = Request.Builder()
-            .url("ws://192.168.1.89:3001")
+            .url("ws://172.20.10.3:3001")
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
@@ -54,13 +54,6 @@ class WebSocketManager {
         webSocket?.send(json.toString())
     }
 
-    fun sendLocation(lat: Double, lng: Double) {
-        val json = JSONObject()
-        json.put("type", "location")
-        json.put("lat", lat)
-        json.put("lng", lng)
-        webSocket?.send(json.toString())
-    }
     fun sendLocation(lat: Double, lng: Double) {
         val json = JSONObject()
         json.put("type", "location")

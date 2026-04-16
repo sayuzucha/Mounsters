@@ -2,12 +2,14 @@ package com.example.mounsters.features.Battle.presentation.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -17,13 +19,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.mounsters.features.Battle.presentation.viewmodels.BattleState
 import com.example.mounsters.features.Battle.presentation.viewmodels.BattleViewModel
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import com.example.mounsters.features.Battle.presentation.viewmodels.BattleState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +38,6 @@ fun BattleScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Ubicación fija igual que ExploreScreen
     val userLat = 16.776
     val userLng = -93.112
 
@@ -82,7 +83,6 @@ fun BattleScreen(
                 is BattleState.SelectingTrophy -> {
                     Column(modifier = Modifier.fillMaxSize()) {
 
-                        // Mapa ocupa 65% de la pantalla
                         AndroidView(
                             factory = { ctx ->
                                 MapView(ctx).apply {
@@ -95,7 +95,6 @@ fun BattleScreen(
                             update = { map ->
                                 map.overlays.clear()
 
-                                // Marcador del jugador
                                 Marker(map).apply {
                                     position = GeoPoint(userLat, userLng)
                                     title = "Tú"
@@ -103,7 +102,6 @@ fun BattleScreen(
                                     map.overlays.add(this)
                                 }
 
-                                // 3 trofeos
                                 uiState.trophies.forEachIndexed { i, trophy ->
                                     Marker(map).apply {
                                         position = trophy.position
@@ -119,7 +117,6 @@ fun BattleScreen(
                                 .weight(0.65f)
                         )
 
-                        // Panel inferior
                         Column(
                             modifier = Modifier
                                 .weight(0.35f)
@@ -180,12 +177,44 @@ fun BattleScreen(
                             modifier = Modifier.size(72.dp)
                         )
                         Spacer(Modifier.height(24.dp))
+
                         Text(
-                            "$monsterName está en camino al trofeo...",
+                            text = state.msg,
                             color = Color.White,
                             fontSize = 16.sp,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 32.dp)
                         )
+
+                        Spacer(Modifier.height(20.dp))
+
+                        LinearProgressIndicator(
+                            progress = { (state.step + 1) / 3f },
+                            modifier = Modifier
+                                .fillMaxWidth(0.7f)
+                                .height(8.dp)
+                                .clip(RoundedCornerShape(4.dp)),
+                            color = Color(0xFF00E5FF),
+                            trackColor = Color(0xFF1E293B)
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Text(
+                            text = "Paso ${state.step + 1} de 3",
+                            color = Color(0xFF94A3B8),
+                            fontSize = 12.sp
+                        )
+
+                        if (state.msg.contains("Esperando")) {
+                            Spacer(Modifier.height(16.dp))
+                            Text(
+                                text = "La batalla continuará automáticamente\ncuando regrese la conexión",
+                                color = Color(0xFFF59E0B),
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
 
